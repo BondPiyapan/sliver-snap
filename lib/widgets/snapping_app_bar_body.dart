@@ -24,6 +24,8 @@ class SnappingAppBarBody extends StatelessWidget {
     this.automaticallyImplyLeading = false,
     this.elevation = 0,
     this.forceElevated = false,
+    this.physics,
+    this.minHeight,
   });
 
   final ScrollController scrollController;
@@ -49,6 +51,10 @@ class SnappingAppBarBody extends StatelessWidget {
   final bool forceElevated;
   final double? elevation;
 
+  // add physic
+  final ScrollPhysics? physics;
+  final double? minHeight;
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -57,6 +63,7 @@ class SnappingAppBarBody extends StatelessWidget {
         CustomScrollView(
           controller: scrollController,
           scrollBehavior: scrollBehavior,
+          physics: physics,
           slivers: [
             SliverAppBar(
               actions: actions,
@@ -65,20 +72,15 @@ class SnappingAppBarBody extends StatelessWidget {
               stretch: stretch,
               bottom: bottom,
               expandedHeight: expandedContentHeight,
-              collapsedHeight: collapsedBarHeight,
+              collapsedHeight: 0,
+              toolbarHeight: 0,
               centerTitle: false,
               pinned: pinned,
               elevation: elevation,
               forceElevated: forceElevated,
-              title: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: isCollapsed ? 1 : 0,
-                child: collapsedBar,
-              ),
+              title: collapsedBar,
               automaticallyImplyLeading: automaticallyImplyLeading,
-              backgroundColor: isCollapsed
-                  ? collapsedBackgroundColor
-                  : expandedBackgroundColor,
+              backgroundColor: isCollapsed ? collapsedBackgroundColor : expandedBackgroundColor,
               leading: leading,
               flexibleSpace: FlexibleSpaceBar(
                 background: expandedContent,
@@ -87,7 +89,7 @@ class SnappingAppBarBody extends StatelessWidget {
             SliverToBoxAdapter(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height,
+                  minHeight: minHeight != null ? minHeight! : MediaQuery.of(context).size.height,
                 ),
                 child: body,
               ),

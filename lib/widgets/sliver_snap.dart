@@ -188,6 +188,13 @@ class SliverSnap extends HookWidget {
   /// Defaults to `0.0`
   final double elevation;
 
+  /// scroll physic
+  final ScrollPhysics? physics;
+
+  final bool fadeAnimation;
+
+  final double? minHeight;
+
   const SliverSnap({
     super.key,
     required this.expandedContent,
@@ -213,17 +220,18 @@ class SliverSnap extends HookWidget {
     this.automaticallyImplyLeading = false,
     this.forceElevated = false,
     this.elevation = 0.0,
+    this.physics,
+    this.fadeAnimation = true,
+    this.minHeight,
   });
 
   @override
   Widget build(BuildContext context) {
     final isCollapsedValueNotifier = useState(false);
-    final defaultExpandedContentHeight =
-        expandedContentHeight ?? MediaQuery.of(context).size.height / 2;
+    final defaultExpandedContentHeight = expandedContentHeight ?? MediaQuery.of(context).size.height / 2;
 
     final controller = scrollController ?? useScrollController();
-    final snappingScrollNotificationHandler =
-        SnappingScrollNotificationHandler.withHapticFeedback(
+    final snappingScrollNotificationHandler = SnappingScrollNotificationHandler.withHapticFeedback(
       expandedBarHeight: defaultExpandedContentHeight,
       collapsedBarHeight: collapsedBarHeight,
       bottomBarHeight: bottom?.preferredSize.height ?? 0.0,
@@ -232,8 +240,7 @@ class SliverSnap extends HookWidget {
     final animatedOpacity = useState(1.0);
 
     return NotificationListener<ScrollNotification>(
-      onNotification: (notification) =>
-          snappingScrollNotificationHandler.handleScrollNotification(
+      onNotification: (notification) => snappingScrollNotificationHandler.handleScrollNotification(
         notification: notification,
         isCollapsedValueNotifier: isCollapsedValueNotifier,
         onCollapseStateChanged: (isCollapsed, scrollingOffset, maxExtent) {
@@ -242,10 +249,10 @@ class SliverSnap extends HookWidget {
             controller.offset,
             controller.position.maxScrollExtent,
           );
-
           scrollPercentValueNotifier.value = 1 - scrollingOffset / maxExtent;
-          animatedOpacity.value =
-              _calculateOpacity(scrollPercentValueNotifier.value);
+          if (fadeAnimation) {
+            animatedOpacity.value = _calculateOpacity(scrollPercentValueNotifier.value);
+          }
         },
         scrollController: controller,
       ),
@@ -254,11 +261,13 @@ class SliverSnap extends HookWidget {
         backdropWidget: backdropWidget,
         collapsedBar: collapsedContent,
         bottom: bottom,
-        expandedContent: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: animatedOpacity.value,
-          child: expandedContent,
-        ),
+        expandedContent: fadeAnimation
+            ? AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: animatedOpacity.value,
+                child: expandedContent,
+              )
+            : expandedContent,
         leading: leading,
         actions: actions,
         pinned: pinned,
@@ -275,6 +284,8 @@ class SliverSnap extends HookWidget {
         isCollapsed: isCollapsedValueNotifier.value,
         forceElevated: forceElevated,
         elevation: elevation,
+        physics: physics,
+        minHeight: minHeight,
       ),
     );
   }
